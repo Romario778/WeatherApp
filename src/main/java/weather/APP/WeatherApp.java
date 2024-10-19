@@ -1,10 +1,10 @@
-package main.weather.APP;
+package weather.APP;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Scanner;
+
 import org.json.JSONObject;
 
 public class WeatherApp {
@@ -12,13 +12,9 @@ public class WeatherApp {
     // API ключ, полученный на сайте openweathermap.org
     private static final String API_KEY = "61b009e9774f3ac0787a27eb53fe7381";
     private static final String API_URL = "https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric";
+    private static String weatherInfo;
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Введите название города:");
-        String cityName = scanner.nextLine();
-
+    public String getWeather(String cityName) {
         try {
             // Формирование URL для запроса погоды
             String apiUrl = String.format(API_URL, cityName, API_KEY);
@@ -31,19 +27,21 @@ public class WeatherApp {
                 parseAndDisplayWeather(jsonResponse);
             } else {
                 System.out.println("Не удалось получить данные о погоде.");
+                weatherInfo = "Не удалось получить данные о погоде. Проверьте правильность ввода";
             }
         } catch (Exception e) {
             System.out.println("Ошибка: " + e.getMessage());
+            weatherInfo = "Ошибка соединения, попробуйте повторить запрос позже";
         }
-
-        scanner.close();
+        return weatherInfo;
     }
 
     // Метод для отправки HTTP запроса
-    private static String sendHttpRequest(String apiUrl) throws Exception {
+    private String sendHttpRequest(String apiUrl) throws Exception {
         URL url = new URL(apiUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
+        connection.setConnectTimeout(3000);
 
         // Проверка кода ответа
         int responseCode = connection.getResponseCode();
@@ -65,7 +63,7 @@ public class WeatherApp {
     }
 
     // Метод для обработки и вывода данных о погоде
-    private static void parseAndDisplayWeather(String jsonResponse) {
+    private void parseAndDisplayWeather(String jsonResponse) {
         JSONObject jsonObject = new JSONObject(jsonResponse);
 
         // Извлекаем данные о температуре, погоде и др.
@@ -82,10 +80,11 @@ public class WeatherApp {
         String cityName = jsonObject.getString("name");
 
         // Вывод данных
-        System.out.println("Погода в городе: " + cityName);
-        System.out.println("Температура: " + temp + "°C");
-        System.out.println("Ветер: " + windSpeed + "М/С");
-        System.out.println("Влажность: " + humidity + "%");
-        System.out.println("Описание: " + description);
+        weatherInfo = "Погода в городе: " + cityName +
+                "\nТемпература: " + temp + "°C" +
+                "\nВетер: " + windSpeed + "М/С" +
+                "\nВлажность: " + humidity + "%" +
+                "\nОписание: " + description + "\n";
+        System.out.println(weatherInfo);
     }
 }
